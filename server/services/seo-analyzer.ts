@@ -436,10 +436,500 @@ export class SeoAnalyzer {
     return improvements.slice(0, 6); // Return top 6 most relevant improvements
   }
 
-  compareWebsites(data1: WebsiteData, report1: any, data2: WebsiteData, report2: any): any {
+  analyzeAiPlatformVisibility(data: WebsiteData): any {
+    const factors = [];
+    let totalScore = 0;
+    const maxScore = 1200; // 12 factors × 100 points each
+
+    // 1. Crawlability Assessment
+    const crawlabilityScore = this.assessCrawlability(data);
+    factors.push({
+      factor: 'Public Crawlability',
+      score: crawlabilityScore,
+      description: 'Page accessibility for AI crawlers without login walls or blocking',
+      status: crawlabilityScore >= 80 ? 'pass' : crawlabilityScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += crawlabilityScore;
+
+    // 2. HTML Structure Quality
+    const structureScore = this.assessHtmlStructure(data);
+    factors.push({
+      factor: 'HTML Structure',
+      score: structureScore,
+      description: 'Clean semantic HTML with proper heading hierarchy',
+      status: structureScore >= 80 ? 'pass' : structureScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += structureScore;
+
+    // 3. Content Clarity and Organization
+    const clarityScore = this.assessContentClarity(data);
+    factors.push({
+      factor: 'Content Clarity',
+      score: clarityScore,
+      description: 'Clear introduction, topic definition, and direct question answers',
+      status: clarityScore >= 80 ? 'pass' : clarityScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += clarityScore;
+
+    // 4. Scannable Content Format
+    const scannabilityScore = this.assessScanability(data);
+    factors.push({
+      factor: 'Content Scannability',
+      score: scannabilityScore,
+      description: 'Short paragraphs and easy-to-summarize content structure',
+      status: scannabilityScore >= 80 ? 'pass' : scannabilityScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += scannabilityScore;
+
+    // 5. Summary Sections
+    const summaryScore = this.assessSummarySections(data);
+    factors.push({
+      factor: 'TL;DR & Summary',
+      score: summaryScore,
+      description: 'Quick summary sections at top or bottom of content',
+      status: summaryScore >= 80 ? 'pass' : summaryScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += summaryScore;
+
+    // 6. Q&A Format Content
+    const qaScore = this.assessQaFormat(data);
+    factors.push({
+      factor: 'Q&A Format',
+      score: qaScore,
+      description: 'Structured question-answer blocks that AI can easily extract',
+      status: qaScore >= 80 ? 'pass' : qaScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += qaScore;
+
+    // 7. Schema Markup Implementation
+    const schemaScore = this.assessSchemaMarkup(data);
+    factors.push({
+      factor: 'Schema Markup',
+      score: schemaScore,
+      description: 'FAQPage, HowTo, Article, and other relevant structured data',
+      status: schemaScore >= 80 ? 'pass' : schemaScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += schemaScore;
+
+    // 8. Trusted Entity References
+    const entityScore = this.assessTrustedEntities(data);
+    factors.push({
+      factor: 'Trusted Entities',
+      score: entityScore,
+      description: 'References to organizations, authority sources, and credible links',
+      status: entityScore >= 80 ? 'pass' : entityScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += entityScore;
+
+    // 9. Extractable Data Formats
+    const dataScore = this.assessDataFormats(data);
+    factors.push({
+      factor: 'Data Extraction',
+      score: dataScore,
+      description: 'Bullet lists, tables, statistics, and structured information',
+      status: dataScore >= 80 ? 'pass' : dataScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += dataScore;
+
+    // 10. Reading Level and Clarity
+    const readabilityScore = this.assessReadability(data);
+    factors.push({
+      factor: 'Readability Level',
+      score: readabilityScore,
+      description: '8th-grade reading level, minimal jargon and marketing fluff',
+      status: readabilityScore >= 80 ? 'pass' : readabilityScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += readabilityScore;
+
+    // 11. Freshness Signals
+    const freshnessScore = this.assessFreshness(data);
+    factors.push({
+      factor: 'Content Freshness',
+      score: freshnessScore,
+      description: 'Updated dates, current year references, and freshness indicators',
+      status: freshnessScore >= 80 ? 'pass' : freshnessScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += freshnessScore;
+
+    // 12. Credibility Markers
+    const credibilityScore = this.assessCredibility(data);
+    factors.push({
+      factor: 'Credibility Markers',
+      score: credibilityScore,
+      description: 'Author information, contact details, and about us content',
+      status: credibilityScore >= 80 ? 'pass' : credibilityScore >= 50 ? 'warning' : 'fail'
+    });
+    totalScore += credibilityScore;
+
+    const overallScore = Math.round((totalScore / maxScore) * 100);
+    
+    // Generate summary
+    const failingFactors = factors.filter(f => f.status === 'fail').length;
+    const warningFactors = factors.filter(f => f.status === 'warning').length;
+    
+    let summary = '';
+    if (overallScore >= 80) {
+      summary = 'Excellent AI platform visibility with strong optimization across most factors';
+    } else if (overallScore >= 60) {
+      summary = `Good AI visibility with ${failingFactors + warningFactors} areas needing improvement`;
+    } else if (overallScore >= 40) {
+      summary = `Moderate AI visibility. ${failingFactors} critical issues and ${warningFactors} warnings to address`;
+    } else {
+      summary = `Poor AI platform visibility. Significant optimization needed across ${failingFactors} critical areas`;
+    }
+
+    // Generate recommendations
+    const recommendations = this.generateAiVisibilityRecommendations(factors, overallScore);
+
+    return {
+      overallScore,
+      summary,
+      factors,
+      recommendations
+    };
+  }
+
+  private assessCrawlability(data: WebsiteData): number {
+    // Basic crawlability assessment - in real implementation would check robots.txt, meta tags, etc.
+    let score = 80; // Base score assuming public access
+    
+    // Check for potential blocking indicators in content
+    if (data.content.toLowerCase().includes('login') || data.content.toLowerCase().includes('sign in')) {
+      score -= 20;
+    }
+    
+    return Math.max(0, score);
+  }
+
+  private assessHtmlStructure(data: WebsiteData): number {
+    let score = 0;
+    
+    // Check for single H1
+    const h1Count = data.headings.filter(h => h.level === 1).length;
+    if (h1Count === 1) score += 25;
+    else if (h1Count === 0) score += 0;
+    else score += 10; // Multiple H1s are not ideal
+    
+    // Check for proper heading hierarchy
+    const hasH2 = data.headings.some(h => h.level === 2);
+    const hasH3 = data.headings.some(h => h.level === 3);
+    if (hasH2) score += 25;
+    if (hasH3) score += 15;
+    
+    // Basic structure bonus
+    if (data.title && data.title.length > 10) score += 20;
+    if (data.metaDescription && data.metaDescription.length > 50) score += 15;
+    
+    return Math.min(100, score);
+  }
+
+  private assessContentClarity(data: WebsiteData): number {
+    let score = 0;
+    const content = data.content.toLowerCase();
+    
+    // Check for clear introduction patterns
+    if (content.includes('what is') || content.includes('introduction') || content.includes('overview')) {
+      score += 25;
+    }
+    
+    // Check for question-answering patterns
+    if (content.includes('how to') || content.includes('why') || content.includes('when')) {
+      score += 25;
+    }
+    
+    // Check for definition patterns
+    if (content.includes('definition') || content.includes('means') || content.includes('refers to')) {
+      score += 20;
+    }
+    
+    // Content length check
+    if (data.wordCount > 300 && data.wordCount < 3000) {
+      score += 30;
+    } else if (data.wordCount >= 3000) {
+      score += 15;
+    }
+    
+    return Math.min(100, score);
+  }
+
+  private assessScanability(data: WebsiteData): number {
+    let score = 0;
+    const content = data.content;
+    
+    // Estimate paragraph structure (simple heuristic)
+    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 50);
+    const avgParagraphLength = paragraphs.reduce((sum, p) => sum + p.length, 0) / paragraphs.length;
+    
+    if (avgParagraphLength < 300) score += 40; // Short paragraphs
+    else if (avgParagraphLength < 500) score += 25;
+    else score += 10;
+    
+    // Check for bullet points or lists
+    if (content.includes('•') || content.includes('*') || content.includes('1.') || content.includes('-')) {
+      score += 30;
+    }
+    
+    // Check for clear section breaks
+    if (data.headings.length > 3) {
+      score += 30;
+    }
+    
+    return Math.min(100, score);
+  }
+
+  private assessSummarySections(data: WebsiteData): number {
+    const content = data.content.toLowerCase();
+    let score = 0;
+    
+    // Check for TL;DR
+    if (content.includes('tl;dr') || content.includes('tldr')) score += 40;
+    
+    // Check for summary indicators
+    if (content.includes('summary') || content.includes('key points') || content.includes('takeaways')) {
+      score += 30;
+    }
+    
+    // Check for conclusion
+    if (content.includes('conclusion') || content.includes('to summarize')) {
+      score += 30;
+    }
+    
+    return Math.min(100, score);
+  }
+
+  private assessQaFormat(data: WebsiteData): number {
+    const content = data.content.toLowerCase();
+    let score = 0;
+    
+    // Check for Q&A patterns
+    if (content.includes('q:') || content.includes('question:') || content.includes('faq')) {
+      score += 40;
+    }
+    
+    // Check for answer patterns
+    if (content.includes('a:') || content.includes('answer:')) {
+      score += 30;
+    }
+    
+    // Check for question headings
+    const questionHeadings = data.headings.filter(h => 
+      h.text.toLowerCase().includes('?') || 
+      h.text.toLowerCase().startsWith('how ') ||
+      h.text.toLowerCase().startsWith('what ') ||
+      h.text.toLowerCase().startsWith('why ')
+    );
+    
+    if (questionHeadings.length > 0) {
+      score += 30;
+    }
+    
+    return Math.min(100, score);
+  }
+
+  private assessSchemaMarkup(data: WebsiteData): number {
+    let score = 0;
+    
+    if (data.hasSchema) {
+      score += 50;
+      
+      // Bonus for specific schema types
+      if (data.schemaTypes.includes('FAQPage')) score += 20;
+      if (data.schemaTypes.includes('Article')) score += 15;
+      if (data.schemaTypes.includes('HowTo')) score += 15;
+    }
+    
+    return Math.min(100, score);
+  }
+
+  private assessTrustedEntities(data: WebsiteData): number {
+    let score = 0;
+    const content = data.content.toLowerCase();
+    
+    // Check for authority domain references
+    if (content.includes('wikipedia') || content.includes('.gov') || content.includes('.edu')) {
+      score += 30;
+    }
+    
+    // Check for organization mentions
+    if (content.includes('research') || content.includes('study') || content.includes('university')) {
+      score += 25;
+    }
+    
+    // Check for external links (basic heuristic)
+    const externalLinks = data.links.filter(link => !link.isInternal);
+    if (externalLinks.length > 2) score += 25;
+    if (externalLinks.length > 5) score += 20;
+    
+    return Math.min(100, score);
+  }
+
+  private assessDataFormats(data: WebsiteData): number {
+    let score = 0;
+    const content = data.content;
+    
+    // Check for bullet points
+    if (content.includes('•') || content.includes('*') || content.match(/^\s*[-\*\+]/m)) {
+      score += 30;
+    }
+    
+    // Check for numbered lists
+    if (content.match(/^\s*\d+\./m)) {
+      score += 25;
+    }
+    
+    // Check for statistical data
+    if (content.match(/\d+%/) || content.match(/\$\d+/) || content.match(/\d+,\d+/)) {
+      score += 25;
+    }
+    
+    // Tables would be checked in real HTML parsing
+    score += 20; // Base score for basic formatting
+    
+    return Math.min(100, score);
+  }
+
+  private assessReadability(data: WebsiteData): number {
+    let score = 60; // Base readability score
+    
+    // Simple readability heuristics
+    const avgWordsPerSentence = data.wordCount / (data.content.split('.').length || 1);
+    
+    if (avgWordsPerSentence < 15) score += 25;
+    else if (avgWordsPerSentence < 20) score += 15;
+    else score += 5;
+    
+    // Check for jargon indicators (overly complex words)
+    const complexWords = data.content.match(/\w{10,}/g) || [];
+    const complexWordRatio = complexWords.length / data.wordCount;
+    
+    if (complexWordRatio < 0.05) score += 15;
+    else if (complexWordRatio < 0.1) score += 10;
+    
+    return Math.min(100, score);
+  }
+
+  private assessFreshness(data: WebsiteData): number {
+    let score = 0;
+    const content = data.content.toLowerCase();
+    const currentYear = new Date().getFullYear();
+    
+    // Check for current year
+    if (content.includes(currentYear.toString())) score += 40;
+    if (content.includes((currentYear - 1).toString())) score += 20;
+    
+    // Check for freshness indicators
+    if (content.includes('updated') || content.includes('revised') || content.includes('latest')) {
+      score += 30;
+    }
+    
+    // Check for recent dates
+    if (content.includes('2024') || content.includes('2025')) {
+      score += 30;
+    }
+    
+    return Math.min(100, score);
+  }
+
+  private assessCredibility(data: WebsiteData): number {
+    let score = 40; // Base score
+    const content = data.content.toLowerCase();
+    
+    // Check for author information
+    if (content.includes('author') || content.includes('written by') || content.includes('by:')) {
+      score += 25;
+    }
+    
+    // Check for contact information
+    if (content.includes('contact') || content.includes('about us') || content.includes('team')) {
+      score += 20;
+    }
+    
+    // Check for credentials
+    if (content.includes('expert') || content.includes('certified') || content.includes('professional')) {
+      score += 15;
+    }
+    
+    return Math.min(100, score);
+  }
+
+  private generateAiVisibilityRecommendations(factors: any[], overallScore: number): any[] {
+    const recommendations = [];
+    
+    // High priority recommendations for critical failures
+    factors.forEach(factor => {
+      if (factor.status === 'fail') {
+        switch (factor.factor) {
+          case 'TL;DR & Summary':
+            recommendations.push({
+              priority: 'high',
+              action: 'Add TL;DR Summary Section',
+              description: 'Page ke top या bottom में 2-3 sentences का clear summary add करें जो main points cover करे',
+              impact: 'AI tools आपका content easily समझ और summarize कर पाएंगे'
+            });
+            break;
+          case 'Q&A Format':
+            recommendations.push({
+              priority: 'high',
+              action: 'Create FAQ Section',
+              description: 'Common questions और उनके direct answers add करें structured format में',
+              impact: 'ChatGPT और Perplexity में better visibility मिलेगी'
+            });
+            break;
+          case 'Schema Markup':
+            recommendations.push({
+              priority: 'high',
+              action: 'Implement Structured Data',
+              description: 'FAQPage, Article, या HowTo schema markup add करें',
+              impact: 'AI platforms को content का context better समझ आएगा'
+            });
+            break;
+        }
+      }
+    });
+    
+    // Medium priority for warnings
+    factors.forEach(factor => {
+      if (factor.status === 'warning') {
+        switch (factor.factor) {
+          case 'HTML Structure':
+            recommendations.push({
+              priority: 'medium',
+              action: 'Improve Heading Structure',
+              description: 'Single H1 use करें और proper H2/H3 hierarchy बनाएं',
+              impact: 'Content का logical flow AI को better समझ आएगा'
+            });
+            break;
+          case 'Content Scannability':
+            recommendations.push({
+              priority: 'medium',
+              action: 'Break Content into Short Paragraphs',
+              description: 'Long paragraphs को छोटे में divide करें और bullet points use करें',
+              impact: 'AI tools content को easily scan और extract कर पाएंगे'
+            });
+            break;
+        }
+      }
+    });
+    
+    // General recommendations based on score
+    if (overallScore < 70) {
+      recommendations.push({
+        priority: 'medium',
+        action: 'Add Current Year References',
+        description: '2025 और recent data points include करें content freshness के लिए',
+        impact: 'AI platforms fresh और relevant content को prefer करते हैं'
+      });
+    }
+    
+    return recommendations.slice(0, 8); // Return top 8 recommendations
+  }
+
+  compareWebsites(data1: WebsiteData, report1: any, data2: WebsiteData, report2: any, 
+                  aiVisibility1: any, aiVisibility2: any): any {
     const seoScoreDiff = report2.seoScore - report1.seoScore;
     const aiScoreDiff = report2.aiScore - report1.aiScore;
-    const betterPerformer = seoScoreDiff + aiScoreDiff > 0 ? 'url2' : 'url1';
+    const aiVisibilityDiff = aiVisibility2.overallScore - aiVisibility1.overallScore;
+    const betterPerformer = (seoScoreDiff + aiScoreDiff + aiVisibilityDiff) > 0 ? 'url2' : 'url1';
     
     const keyDifferences = [];
 
@@ -464,6 +954,31 @@ export class SeoAnalyzer {
       });
     }
 
+    // AI Platform Visibility Differences
+    if (Math.abs(aiVisibilityDiff) > 15) {
+      const factor1 = aiVisibility1.factors.find((f: any) => f.factor === 'TL;DR & Summary');
+      const factor2 = aiVisibility2.factors.find((f: any) => f.factor === 'TL;DR & Summary');
+      
+      keyDifferences.push({
+        category: 'visibility' as const,
+        aspect: 'AI Platform Summary',
+        url1Value: factor1 ? `${factor1.score}/100` : 'Not assessed',
+        url2Value: factor2 ? `${factor2.score}/100` : 'Not assessed',
+        recommendation: 'Add TL;DR sections और clear summaries for better AI visibility'
+      });
+
+      const schema1 = aiVisibility1.factors.find((f: any) => f.factor === 'Schema Markup');
+      const schema2 = aiVisibility2.factors.find((f: any) => f.factor === 'Schema Markup');
+      
+      keyDifferences.push({
+        category: 'visibility' as const,
+        aspect: 'Structured Data Implementation',
+        url1Value: schema1 ? `${schema1.score}/100` : 'Not assessed',
+        url2Value: schema2 ? `${schema2.score}/100` : 'Not assessed',
+        recommendation: 'Implement FAQPage और Article schema markup for AI platforms'
+      });
+    }
+
     // AI Optimization Differences
     if (Math.abs(aiScoreDiff) > 10) {
       const hasH2_1 = data1.headings.some(h => h.level === 2);
@@ -475,17 +990,6 @@ export class SeoAnalyzer {
         url1Value: hasH2_1 ? 'Has H2 structure' : 'Poor heading structure',
         url2Value: hasH2_2 ? 'Has H2 structure' : 'Poor heading structure',
         recommendation: 'Use H2/H3 headings for better AI content parsing'
-      });
-
-      const hasTldr1 = data1.content.toLowerCase().includes('tl;dr');
-      const hasTldr2 = data2.content.toLowerCase().includes('tl;dr');
-      
-      keyDifferences.push({
-        category: 'ai' as const,
-        aspect: 'TL;DR Summary',
-        url1Value: hasTldr1 ? 'Present' : 'Missing',
-        url2Value: hasTldr2 ? 'Present' : 'Missing',
-        recommendation: 'Add TL;DR section for better AI tool visibility'
       });
 
       keyDifferences.push({
@@ -500,6 +1004,7 @@ export class SeoAnalyzer {
     return {
       seoScoreDiff,
       aiScoreDiff,
+      aiVisibilityDiff,
       betterPerformer,
       keyDifferences
     };

@@ -173,15 +173,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       ]);
 
+      // Analyze AI Platform Visibility for both websites
+      const [url1AiVisibility, url2AiVisibility] = [
+        seoAnalyzer.analyzeAiPlatformVisibility(websiteData1),
+        seoAnalyzer.analyzeAiPlatformVisibility(websiteData2)
+      ];
+
       // Generate comparison analysis
       const differences = seoAnalyzer.compareWebsites(
         websiteData1, url1Report, 
-        websiteData2, url2Report
+        websiteData2, url2Report,
+        url1AiVisibility, url2AiVisibility
       );
 
       const comparisonResult = {
         url1Report,
         url2Report,
+        url1AiVisibility,
+        url2AiVisibility,
         differences
       };
 

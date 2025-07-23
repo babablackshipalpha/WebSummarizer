@@ -94,15 +94,35 @@ export interface ComparisonRequest {
   includeContentSuggestions: boolean;
 }
 
+export interface AiPlatformVisibility {
+  overallScore: number;
+  summary: string;
+  factors: Array<{
+    factor: string;
+    score: number;
+    description: string;
+    status: 'pass' | 'warning' | 'fail';
+  }>;
+  recommendations: Array<{
+    priority: 'high' | 'medium' | 'low';
+    action: string;
+    description: string;
+    impact: string;
+  }>;
+}
+
 export interface ComparisonResult {
   url1Report: AuditReport;
   url2Report: AuditReport;
+  url1AiVisibility: AiPlatformVisibility;
+  url2AiVisibility: AiPlatformVisibility;
   differences: {
     seoScoreDiff: number;
     aiScoreDiff: number;
+    aiVisibilityDiff: number;
     betterPerformer: string;
     keyDifferences: Array<{
-      category: 'seo' | 'ai' | 'content';
+      category: 'seo' | 'ai' | 'content' | 'visibility';
       aspect: string;
       url1Value: string;
       url2Value: string;

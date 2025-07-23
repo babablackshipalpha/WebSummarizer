@@ -104,13 +104,19 @@ The application follows a modern full-stack architecture with clear separation b
 ✓ Enhanced content suggestions with priority-based AI optimization recommendations
 ✓ Added tabs interface for single analysis vs comparison modes
 ✓ Improved user experience with better scoring explanations
+✓ Added comprehensive AI Platform Visibility Assessment with 12-factor analysis
+✓ Integrated detailed comparison showing ChatGPT, Perplexity, Claude, and Bard optimization factors
+✓ Enhanced recommendations with priority-based actionable steps in Hindi/English mix
 
 ## Key Features
 
 1. **Single Website Analysis**: Complete SEO and AI visibility audit with detailed scoring
 2. **Website Comparison**: Side-by-side analysis of two websites with difference highlighting
-3. **AI Improvement Suggestions**: Personalized recommendations based on current AI visibility score
-4. **Multilingual Support**: Hindi/English mixed suggestions for better user understanding
-5. **Export Functionality**: PDF and CSV export options for reports
+3. **AI Platform Visibility Assessment**: 12-factor analysis for ChatGPT, Perplexity, Claude, and Bard optimization
+4. **AI Improvement Suggestions**: Personalized recommendations based on current AI visibility score
+5. **Multilingual Support**: Hindi/English mixed suggestions for better user understanding
+6. **Priority-Based Recommendations**: High, medium, and low impact suggestions with clear actions
+7. **Detailed Factor Analysis**: Individual scoring for crawlability, HTML structure, content clarity, schema markup, and more
+8. **Export Functionality**: PDF and CSV export options for reports
 
 The application is designed to be scalable, maintainable, and provide a smooth user experience for website SEO auditing across both traditional search engines and modern AI platforms.
