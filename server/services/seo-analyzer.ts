@@ -256,7 +256,7 @@ export class SeoAnalyzer {
     return { results, score: Math.min(score, maxScore) };
   }
 
-  generateContentSuggestions(data: WebsiteData): ContentSuggestions {
+  generateContentSuggestions(data: WebsiteData, aiScore: number): ContentSuggestions {
     // Generate missing keywords based on content analysis
     const missingKeywords = [
       'SEO optimization',
@@ -330,12 +330,178 @@ export class SeoAnalyzer {
       bard: 'low' as const
     };
 
+    // Generate AI improvement suggestions based on current score
+    const aiImprovements = this.generateAiImprovements(data, aiScore);
+
     return {
       missingKeywords,
       blogTitles,
       contentStructure,
       faqs,
-      aiVisibility
+      aiVisibility,
+      aiImprovements
+    };
+  }
+
+  generateAiImprovements(data: WebsiteData, currentScore: number): Array<{
+    action: string;
+    description: string;
+    impact: 'high' | 'medium' | 'low';
+    priority: number;
+  }> {
+    const improvements = [];
+    
+    // High priority improvements for scores below 50
+    if (currentScore < 50) {
+      improvements.push({
+        action: 'Add TL;DR Summary Section',
+        description: 'AI tools ke liye page ke top par 2-3 lines ka summary add kariye jo main points cover kare',
+        impact: 'high' as const,
+        priority: 1
+      });
+      
+      improvements.push({
+        action: 'Create FAQ Schema Markup',
+        description: 'Common questions aur unke answers ko structured data format mein add kariye taaki AI easily samjh sake',
+        impact: 'high' as const,
+        priority: 2
+      });
+    }
+
+    // Medium priority improvements for scores 50-75
+    if (currentScore < 75) {
+      improvements.push({
+        action: 'Improve Content Structure with Clear Headings',
+        description: 'H2/H3 headings use kariye jo direct questions answer karte hain (What is, How to, Why)',
+        impact: 'high' as const,
+        priority: 3
+      });
+      
+      improvements.push({
+        action: 'Add "People Also Ask" Section',
+        description: 'Related questions aur unke short answers add kariye jo users commonly puchte hain',
+        impact: 'medium' as const,
+        priority: 4
+      });
+      
+      improvements.push({
+        action: 'Include Specific Dates and Statistics',
+        description: 'Current year, numbers, aur specific data points add kariye jo AI tools reference kar sakein',
+        impact: 'medium' as const,
+        priority: 5
+      });
+    }
+
+    // Fine-tuning improvements for scores 75-85
+    if (currentScore < 85) {
+      improvements.push({
+        action: 'Optimize for Voice Search Queries',
+        description: 'Natural language phrases add kariye jo log voice assistants se puchte hain',
+        impact: 'medium' as const,
+        priority: 6
+      });
+      
+      improvements.push({
+        action: 'Add Comparison Tables',
+        description: 'Options, features ya alternatives ko table format mein present kariye',
+        impact: 'medium' as const,
+        priority: 7
+      });
+    }
+
+    // Advanced improvements for scores 85+
+    if (currentScore >= 85) {
+      improvements.push({
+        action: 'Link to Authoritative Sources',
+        description: 'Wikipedia, government sites, aur trusted sources ko reference kariye credibility ke liye',
+        impact: 'low' as const,
+        priority: 8
+      });
+      
+      improvements.push({
+        action: 'Add Step-by-Step Instructions',
+        description: 'Process-based content ko numbered lists mein convert kariye',
+        impact: 'low' as const,
+        priority: 9
+      });
+      
+      improvements.push({
+        action: 'Implement Article Schema',
+        description: 'Publisher, author, aur publication date ka structured data add kariye',
+        impact: 'low' as const,
+        priority: 10
+      });
+    }
+
+    return improvements.slice(0, 6); // Return top 6 most relevant improvements
+  }
+
+  compareWebsites(data1: WebsiteData, report1: any, data2: WebsiteData, report2: any): any {
+    const seoScoreDiff = report2.seoScore - report1.seoScore;
+    const aiScoreDiff = report2.aiScore - report1.aiScore;
+    const betterPerformer = seoScoreDiff + aiScoreDiff > 0 ? 'url2' : 'url1';
+    
+    const keyDifferences = [];
+
+    // SEO Differences
+    if (Math.abs(seoScoreDiff) > 10) {
+      keyDifferences.push({
+        category: 'seo' as const,
+        aspect: 'Title Tag Optimization',
+        url1Value: `${data1.title.length} characters`,
+        url2Value: `${data2.title.length} characters`,
+        recommendation: seoScoreDiff > 0 
+          ? 'URL2 has better title length (50-60 chars ideal)'
+          : 'URL1 has better title length optimization'
+      });
+
+      keyDifferences.push({
+        category: 'seo' as const,
+        aspect: 'Meta Description',
+        url1Value: data1.metaDescription ? `${data1.metaDescription.length} chars` : 'Missing',
+        url2Value: data2.metaDescription ? `${data2.metaDescription.length} chars` : 'Missing',
+        recommendation: 'Meta description should be 150-160 characters for best results'
+      });
+    }
+
+    // AI Optimization Differences
+    if (Math.abs(aiScoreDiff) > 10) {
+      const hasH2_1 = data1.headings.some(h => h.level === 2);
+      const hasH2_2 = data2.headings.some(h => h.level === 2);
+      
+      keyDifferences.push({
+        category: 'ai' as const,
+        aspect: 'Content Structure',
+        url1Value: hasH2_1 ? 'Has H2 structure' : 'Poor heading structure',
+        url2Value: hasH2_2 ? 'Has H2 structure' : 'Poor heading structure',
+        recommendation: 'Use H2/H3 headings for better AI content parsing'
+      });
+
+      const hasTldr1 = data1.content.toLowerCase().includes('tl;dr');
+      const hasTldr2 = data2.content.toLowerCase().includes('tl;dr');
+      
+      keyDifferences.push({
+        category: 'ai' as const,
+        aspect: 'TL;DR Summary',
+        url1Value: hasTldr1 ? 'Present' : 'Missing',
+        url2Value: hasTldr2 ? 'Present' : 'Missing',
+        recommendation: 'Add TL;DR section for better AI tool visibility'
+      });
+
+      keyDifferences.push({
+        category: 'ai' as const,
+        aspect: 'Schema Markup',
+        url1Value: data1.hasSchema ? `${data1.schemaTypes.length} types` : 'None',
+        url2Value: data2.hasSchema ? `${data2.schemaTypes.length} types` : 'None',
+        recommendation: 'Implement FAQ and Article schema for AI platforms'
+      });
+    }
+
+    return {
+      seoScoreDiff,
+      aiScoreDiff,
+      betterPerformer,
+      keyDifferences
     };
   }
 }

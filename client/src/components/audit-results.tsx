@@ -176,6 +176,42 @@ export default function AuditResults({ report }: AuditResultsProps) {
               ))}
             </Accordion>
           </div>
+
+          {/* AI Score Improvements */}
+          {report.contentSuggestions.aiImprovements && report.contentSuggestions.aiImprovements.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-slate-900 mb-3">
+                AI Visibility Score को 100 तक पहुंचाने के लिए करें:
+              </h4>
+              <div className="space-y-3">
+                {report.contentSuggestions.aiImprovements.map((improvement, index) => (
+                  <div key={index} className={`p-4 border rounded-lg ${
+                    improvement.impact === 'high' ? 'border-red-200 bg-red-50' :
+                    improvement.impact === 'medium' ? 'border-yellow-200 bg-yellow-50' :
+                    'border-green-200 bg-green-50'
+                  }`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h5 className="font-medium text-slate-900 mb-1">
+                          {improvement.priority}. {improvement.action}
+                        </h5>
+                        <p className="text-sm text-slate-600">{improvement.description}</p>
+                      </div>
+                      <span className={`px-2 py-1 text-xs rounded-full font-medium ml-3 ${
+                        improvement.impact === 'high' ? 'bg-red-100 text-red-800' :
+                        improvement.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {improvement.impact === 'high' ? 'उच्च प्रभाव' :
+                         improvement.impact === 'medium' ? 'मध्यम प्रभाव' :
+                         'कम प्रभाव'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

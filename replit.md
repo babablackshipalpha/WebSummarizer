@@ -6,7 +6,7 @@ This is a full-stack web application that provides comprehensive SEO (Search Eng
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+Preferred communication style: Simple, everyday language, with some Hindi/Hinglish for user-facing improvement suggestions.
 
 ## System Architecture
 
@@ -96,5 +96,21 @@ The application follows a modern full-stack architecture with clear separation b
 5. **Component-First Frontend**: shadcn/ui provides consistent, accessible UI components
 6. **Optimistic UI Updates**: TanStack Query handles loading states and error recovery
 7. **Responsive Design**: Mobile-first approach with Tailwind CSS breakpoints
+
+## Recent Updates (January 2025)
+
+✓ Added AI Visibility Score improvements with personalized suggestions in Hindi/English mix
+✓ Implemented URL comparison feature to analyze two websites side-by-side
+✓ Enhanced content suggestions with priority-based AI optimization recommendations
+✓ Added tabs interface for single analysis vs comparison modes
+✓ Improved user experience with better scoring explanations
+
+## Key Features
+
+1. **Single Website Analysis**: Complete SEO and AI visibility audit with detailed scoring
+2. **Website Comparison**: Side-by-side analysis of two websites with difference highlighting
+3. **AI Improvement Suggestions**: Personalized recommendations based on current AI visibility score
+4. **Multilingual Support**: Hindi/English mixed suggestions for better user understanding
+5. **Export Functionality**: PDF and CSV export options for reports
 
 The application is designed to be scalable, maintainable, and provide a smooth user experience for website SEO auditing across both traditional search engines and modern AI platforms.

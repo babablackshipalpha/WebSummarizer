@@ -1,20 +1,28 @@
 import { useState } from "react";
-import { Search, User, Globe } from "lucide-react";
+import { Search, User, Globe, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UrlInputForm from "@/components/url-input-form";
+import UrlComparisonForm from "@/components/url-comparison-form";
 import AnalysisProgress from "@/components/analysis-progress";
 import AuditResults from "@/components/audit-results";
-import type { AuditReport } from "@shared/schema";
+import ComparisonResults from "@/components/comparison-results";
+import type { AuditReport, ComparisonResult } from "@shared/schema";
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
   const [currentUrl, setCurrentUrl] = useState("");
+  const [compareUrls, setCompareUrls] = useState({ url1: "", url2: "" });
   const [auditReport, setAuditReport] = useState<AuditReport | null>(null);
+  const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
+  const [activeTab, setActiveTab] = useState("analyze");
 
   const handleAnalysisStart = (url: string) => {
     setCurrentUrl(url);
     setIsAnalyzing(true);
     setAuditReport(null);
+    setComparisonResult(null);
   };
 
   const handleAnalysisComplete = (report: AuditReport) => {
@@ -24,6 +32,22 @@ export default function Home() {
 
   const handleAnalysisError = () => {
     setIsAnalyzing(false);
+  };
+
+  const handleComparisonStart = (url1: string, url2: string) => {
+    setCompareUrls({ url1, url2 });
+    setIsComparing(true);
+    setComparisonResult(null);
+    setAuditReport(null);
+  };
+
+  const handleComparisonComplete = (result: ComparisonResult) => {
+    setIsComparing(false);
+    setComparisonResult(result);
+  };
+
+  const handleComparisonError = () => {
+    setIsComparing(false);
   };
 
   return (
@@ -52,11 +76,52 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <UrlInputForm onAnalysisStart={handleAnalysisStart} onAnalysisComplete={handleAnalysisComplete} onAnalysisError={handleAnalysisError} />
-        
-        {isAnalyzing && <AnalysisProgress currentUrl={currentUrl} />}
-        
-        {auditReport && <AuditResults report={auditReport} />}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="analyze" className="flex items-center">
+              <Search className="h-4 w-4 mr-2" />
+              Single Website Analysis
+            </TabsTrigger>
+            <TabsTrigger value="compare" className="flex items-center">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Website Comparison
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analyze" className="space-y-6">
+            <UrlInputForm 
+              onAnalysisStart={handleAnalysisStart} 
+              onAnalysisComplete={handleAnalysisComplete} 
+              onAnalysisError={handleAnalysisError} 
+            />
+            
+            {isAnalyzing && <AnalysisProgress currentUrl={currentUrl} />}
+            
+            {auditReport && <AuditResults report={auditReport} />}
+          </TabsContent>
+
+          <TabsContent value="compare" className="space-y-6">
+            <UrlComparisonForm 
+              onComparisonStart={handleComparisonStart} 
+              onComparisonComplete={handleComparisonComplete} 
+              onComparisonError={handleComparisonError} 
+            />
+            
+            {isComparing && (
+              <div className="text-center py-8">
+                <div className="inline-flex items-center space-x-2 text-primary">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  <span>Comparing websites...</span>
+                </div>
+                <p className="text-sm text-slate-600 mt-2">
+                  Analyzing {new URL(compareUrls.url1).hostname} vs {new URL(compareUrls.url2).hostname}
+                </p>
+              </div>
+            )}
+            
+            {comparisonResult && <ComparisonResults result={comparisonResult} />}
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Footer */}

@@ -54,6 +54,12 @@ export interface ContentSuggestions {
     claude: 'low' | 'medium' | 'high';
     bard: 'low' | 'medium' | 'high';
   };
+  aiImprovements: Array<{
+    action: string;
+    description: string;
+    impact: 'high' | 'medium' | 'low';
+    priority: number;
+  }>;
 }
 
 export interface WebsiteData {
@@ -78,4 +84,29 @@ export interface WebsiteData {
   schemaTypes: string[];
   loadTime: number;
   wordCount: number;
+}
+
+export interface ComparisonRequest {
+  url1: string;
+  url2: string;
+  includeTraditionalSeo: boolean;
+  includeGeo: boolean;
+  includeContentSuggestions: boolean;
+}
+
+export interface ComparisonResult {
+  url1Report: AuditReport;
+  url2Report: AuditReport;
+  differences: {
+    seoScoreDiff: number;
+    aiScoreDiff: number;
+    betterPerformer: string;
+    keyDifferences: Array<{
+      category: 'seo' | 'ai' | 'content';
+      aspect: string;
+      url1Value: string;
+      url2Value: string;
+      recommendation: string;
+    }>;
+  };
 }

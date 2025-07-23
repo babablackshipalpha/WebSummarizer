@@ -13,6 +13,14 @@ const analyzeUrlSchema = z.object({
   includeContentSuggestions: z.boolean().default(true),
 });
 
+const compareUrlSchema = z.object({
+  url1: z.string().url("Please enter a valid URL for first website"),
+  url2: z.string().url("Please enter a valid URL for second website"),
+  includeTraditionalSeo: z.boolean().default(true),
+  includeGeo: z.boolean().default(true),
+  includeContentSuggestions: z.boolean().default(true),
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const webScraper = new WebScraper();
   const seoAnalyzer = new SeoAnalyzer();
@@ -38,13 +46,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate content suggestions
       const contentSuggestions = includeContentSuggestions 
-        ? seoAnalyzer.generateContentSuggestions(websiteData)
+        ? seoAnalyzer.generateContentSuggestions(websiteData, geoAnalysis.score)
         : {
             missingKeywords: [],
             blogTitles: [],
             contentStructure: [],
             faqs: [],
-            aiVisibility: { chatgpt: 'low' as const, perplexity: 'low' as const, claude: 'low' as const, bard: 'low' as const }
+            aiVisibility: { chatgpt: 'low' as const, perplexity: 'low' as const, claude: 'low' as const, bard: 'low' as const },
+            aiImprovements: []
           };
 
       // Create audit report
@@ -89,6 +98,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(reports);
     } catch (error) {
       res.status(500).json({ message: "Failed to retrieve reports" });
+    }
+  });
+
+  // Compare two websites
+  app.post("/api/compare", async (req, res) => {
+    try {
+      const { url1, url2, includeTraditionalSeo, includeGeo, includeContentSuggestions } = 
+        compareUrlSchema.parse(req.body);
+
+      // Scrape both websites
+      const [websiteData1, websiteData2] = await Promise.all([
+        webScraper.scrapeWebsite(url1),
+        webScraper.scrapeWebsite(url2)
+      ]);
+
+      // Analyze first website
+      const traditionalSeoAnalysis1 = includeTraditionalSeo 
+        ? seoAnalyzer.analyzeTraditionalSeo(websiteData1)
+        : { results: [], score: 0 };
+      
+      const geoAnalysis1 = includeGeo 
+        ? seoAnalyzer.analyzeGeo(websiteData1)
+        : { results: [], score: 0 };
+
+      const contentSuggestions1 = includeContentSuggestions 
+        ? seoAnalyzer.generateContentSuggestions(websiteData1, geoAnalysis1.score)
+        : {
+            missingKeywords: [],
+            blogTitles: [],
+            contentStructure: [],
+            faqs: [],
+            aiVisibility: { chatgpt: 'low' as const, perplexity: 'low' as const, claude: 'low' as const, bard: 'low' as const },
+            aiImprovements: []
+          };
+
+      // Analyze second website
+      const traditionalSeoAnalysis2 = includeTraditionalSeo 
+        ? seoAnalyzer.analyzeTraditionalSeo(websiteData2)
+        : { results: [], score: 0 };
+      
+      const geoAnalysis2 = includeGeo 
+        ? seoAnalyzer.analyzeGeo(websiteData2)
+        : { results: [], score: 0 };
+
+      const contentSuggestions2 = includeContentSuggestions 
+        ? seoAnalyzer.generateContentSuggestions(websiteData2, geoAnalysis2.score)
+        : {
+            missingKeywords: [],
+            blogTitles: [],
+            contentStructure: [],
+            faqs: [],
+            aiVisibility: { chatgpt: 'low' as const, perplexity: 'low' as const, claude: 'low' as const, bard: 'low' as const },
+            aiImprovements: []
+          };
+
+      // Create audit reports
+      const [url1Report, url2Report] = await Promise.all([
+        storage.createAuditReport({
+          url: url1,
+          seoScore: traditionalSeoAnalysis1.score,
+          aiScore: geoAnalysis1.score,
+          traditionalSeoResults: traditionalSeoAnalysis1.results,
+          geoResults: geoAnalysis1.results,
+          contentSuggestions: contentSuggestions1,
+        }),
+        storage.createAuditReport({
+          url: url2,
+          seoScore: traditionalSeoAnalysis2.score,
+          aiScore: geoAnalysis2.score,
+          traditionalSeoResults: traditionalSeoAnalysis2.results,
+          geoResults: geoAnalysis2.results,
+          contentSuggestions: contentSuggestions2,
+        })
+      ]);
+
+      // Generate comparison analysis
+      const differences = seoAnalyzer.compareWebsites(
+        websiteData1, url1Report, 
+        websiteData2, url2Report
+      );
+
+      const comparisonResult = {
+        url1Report,
+        url2Report,
+        differences
+      };
+
+      res.json(comparisonResult);
+    } catch (error) {
+      console.error("Comparison error:", error);
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Failed to compare websites" 
+      });
     }
   });
 
