@@ -590,15 +590,30 @@ export class SeoAnalyzer {
   }
 
   private assessCrawlability(data: WebsiteData): number {
-    // Basic crawlability assessment - in real implementation would check robots.txt, meta tags, etc.
-    let score = 80; // Base score assuming public access
+    let score = 70; // Conservative base score
     
     // Check for potential blocking indicators in content
-    if (data.content.toLowerCase().includes('login') || data.content.toLowerCase().includes('sign in')) {
+    const content = data.content.toLowerCase();
+    if (content.includes('login') || content.includes('sign in') || content.includes('register')) {
+      score -= 30;
+    }
+    
+    // Check for paywall indicators
+    if (content.includes('subscription') || content.includes('premium') || content.includes('paywall')) {
       score -= 20;
     }
     
-    return Math.max(0, score);
+    // Boost for public content indicators
+    if (content.includes('free') || content.includes('public') || content.includes('open access')) {
+      score += 20;
+    }
+    
+    // Check URL structure for accessibility
+    if (data.title && !data.title.toLowerCase().includes('404') && !data.title.toLowerCase().includes('error')) {
+      score += 15;
+    }
+    
+    return Math.max(10, Math.min(100, score));
   }
 
   private assessHtmlStructure(data: WebsiteData): number {
@@ -624,55 +639,99 @@ export class SeoAnalyzer {
   }
 
   private assessContentClarity(data: WebsiteData): number {
-    let score = 0;
+    let score = 10; // Base score
     const content = data.content.toLowerCase();
     
-    // Check for clear introduction patterns
-    if (content.includes('what is') || content.includes('introduction') || content.includes('overview')) {
-      score += 25;
-    }
+    // Check for clear introduction patterns (more specific)
+    const introPatterns = ['what is', 'introduction', 'overview', 'in this article', 'this guide'];
+    const foundIntro = introPatterns.some(pattern => content.includes(pattern));
+    if (foundIntro) score += 20;
     
     // Check for question-answering patterns
-    if (content.includes('how to') || content.includes('why') || content.includes('when')) {
-      score += 25;
-    }
+    const qaPatterns = ['how to', 'why', 'when', 'where', 'which', 'who'];
+    const foundQA = qaPatterns.filter(pattern => content.includes(pattern)).length;
+    score += Math.min(foundQA * 8, 25);
     
     // Check for definition patterns
-    if (content.includes('definition') || content.includes('means') || content.includes('refers to')) {
+    const definitionPatterns = ['definition', 'means', 'refers to', 'is defined as', 'can be defined'];
+    const foundDefinitions = definitionPatterns.some(pattern => content.includes(pattern));
+    if (foundDefinitions) score += 15;
+    
+    // Content length scoring (more granular)
+    if (data.wordCount > 500 && data.wordCount < 2000) {
+      score += 25;
+    } else if (data.wordCount >= 2000 && data.wordCount < 4000) {
       score += 20;
+    } else if (data.wordCount >= 300 && data.wordCount <= 500) {
+      score += 15;
+    } else if (data.wordCount < 300) {
+      score += 5;
     }
     
-    // Content length check
-    if (data.wordCount > 300 && data.wordCount < 3000) {
-      score += 30;
-    } else if (data.wordCount >= 3000) {
-      score += 15;
+    // Check for topic consistency (title relevance)
+    if (data.title) {
+      const titleWords = data.title.toLowerCase().split(' ').filter(word => word.length > 3);
+      const contentMentions = titleWords.filter(word => content.includes(word)).length;
+      const relevanceRatio = contentMentions / Math.max(titleWords.length, 1);
+      score += Math.round(relevanceRatio * 15);
     }
     
     return Math.min(100, score);
   }
 
   private assessScanability(data: WebsiteData): number {
-    let score = 0;
+    let score = 5; // Base score
     const content = data.content;
     
-    // Estimate paragraph structure (simple heuristic)
+    // More accurate paragraph analysis
+    const lines = content.split('\n').filter(line => line.trim().length > 20);
     const paragraphs = content.split('\n\n').filter(p => p.trim().length > 50);
-    const avgParagraphLength = paragraphs.reduce((sum, p) => sum + p.length, 0) / paragraphs.length;
     
-    if (avgParagraphLength < 300) score += 40; // Short paragraphs
-    else if (avgParagraphLength < 500) score += 25;
-    else score += 10;
-    
-    // Check for bullet points or lists
-    if (content.includes('•') || content.includes('*') || content.includes('1.') || content.includes('-')) {
-      score += 30;
+    if (paragraphs.length > 0) {
+      const avgParagraphLength = paragraphs.reduce((sum, p) => sum + p.length, 0) / paragraphs.length;
+      
+      if (avgParagraphLength < 200) score += 30; // Very short paragraphs
+      else if (avgParagraphLength < 400) score += 25; // Short paragraphs
+      else if (avgParagraphLength < 600) score += 15; // Medium paragraphs
+      else score += 5; // Long paragraphs
     }
     
-    // Check for clear section breaks
-    if (data.headings.length > 3) {
-      score += 30;
-    }
+    // Enhanced list detection
+    const bulletPoints = (content.match(/[•*\-]\s/g) || []).length;
+    const numberedLists = (content.match(/\d+\.\s/g) || []).length;
+    const totalLists = bulletPoints + numberedLists;
+    
+    if (totalLists > 10) score += 25;
+    else if (totalLists > 5) score += 20;
+    else if (totalLists > 2) score += 15;
+    else if (totalLists > 0) score += 10;
+    
+    // Heading distribution analysis
+    const headingCount = data.headings.length;
+    const contentWords = data.wordCount;
+    const headingRatio = headingCount / Math.max(contentWords / 200, 1); // Headings per ~200 words
+    
+    if (headingRatio > 0.8) score += 25; // Good heading distribution
+    else if (headingRatio > 0.5) score += 20;
+    else if (headingRatio > 0.3) score += 15;
+    else if (headingRatio > 0.1) score += 10;
+    
+    // Check for scannable formatting patterns
+    const formattingPatterns = [
+      /\*\*.*?\*\*/g, // Bold text
+      /\*.*?\*/g, // Italic text
+      /:\s*$/gm, // Colon endings (like lists)
+      /^\s*[-•]\s/gm // List items
+    ];
+    
+    let formattingScore = 0;
+    formattingPatterns.forEach(pattern => {
+      const matches = content.match(pattern);
+      if (matches && matches.length > 0) {
+        formattingScore += Math.min(matches.length * 2, 10);
+      }
+    });
+    score += Math.min(formattingScore, 20);
     
     return Math.min(100, score);
   }
@@ -742,48 +801,132 @@ export class SeoAnalyzer {
   }
 
   private assessTrustedEntities(data: WebsiteData): number {
-    let score = 0;
+    let score = 5; // Base score
     const content = data.content.toLowerCase();
     
-    // Check for authority domain references
-    if (content.includes('wikipedia') || content.includes('.gov') || content.includes('.edu')) {
-      score += 30;
-    }
+    // Authority domain references (more comprehensive)
+    const authorityDomains = ['wikipedia', '.gov', '.edu', '.org', 'reuters', 'bbc', 'cnn', 'nytimes', 'wsj'];
+    const foundAuthority = authorityDomains.filter(domain => content.includes(domain)).length;
+    score += Math.min(foundAuthority * 12, 35);
     
-    // Check for organization mentions
-    if (content.includes('research') || content.includes('study') || content.includes('university')) {
-      score += 25;
-    }
+    // Academic and research indicators
+    const researchTerms = ['research', 'study', 'university', 'journal', 'published', 'peer review', 'academic'];
+    const foundResearch = researchTerms.filter(term => content.includes(term)).length;
+    score += Math.min(foundResearch * 8, 25);
     
-    // Check for external links (basic heuristic)
+    // Industry authority terms
+    const industryTerms = ['according to', 'expert', 'specialist', 'authority', 'leader in', 'established'];
+    const foundIndustry = industryTerms.filter(term => content.includes(term)).length;
+    score += Math.min(foundIndustry * 5, 20);
+    
+    // External links analysis (more sophisticated)
     const externalLinks = data.links.filter(link => !link.isInternal);
-    if (externalLinks.length > 2) score += 25;
-    if (externalLinks.length > 5) score += 20;
+    const linkScore = Math.min(externalLinks.length * 3, 20);
+    score += linkScore;
+    
+    // Check for citations or references
+    if (content.includes('source:') || content.includes('reference') || content.includes('citation')) {
+      score += 15;
+    }
+    
+    // Brand mentions and entities
+    const entityPatterns = ['inc.', 'corp.', 'ltd.', 'company', 'organization', 'institute'];
+    const foundEntities = entityPatterns.filter(pattern => content.includes(pattern)).length;
+    score += Math.min(foundEntities * 4, 15);
     
     return Math.min(100, score);
   }
 
   private assessDataFormats(data: WebsiteData): number {
-    let score = 0;
+    let score = 5; // Conservative base score
     const content = data.content;
     
-    // Check for bullet points
-    if (content.includes('•') || content.includes('*') || content.match(/^\s*[-\*\+]/m)) {
-      score += 30;
-    }
+    // Enhanced bullet point detection
+    const bulletPatterns = [
+      /[•*]\s/g,
+      /^\s*[-\*\+]\s/gm,
+      /▪\s/g,
+      /◦\s/g
+    ];
     
-    // Check for numbered lists
-    if (content.match(/^\s*\d+\./m)) {
-      score += 25;
-    }
+    let bulletCount = 0;
+    bulletPatterns.forEach(pattern => {
+      const matches = content.match(pattern);
+      if (matches) bulletCount += matches.length;
+    });
     
-    // Check for statistical data
-    if (content.match(/\d+%/) || content.match(/\$\d+/) || content.match(/\d+,\d+/)) {
-      score += 25;
-    }
+    if (bulletCount > 10) score += 25;
+    else if (bulletCount > 5) score += 20;
+    else if (bulletCount > 2) score += 15;
+    else if (bulletCount > 0) score += 10;
     
-    // Tables would be checked in real HTML parsing
-    score += 20; // Base score for basic formatting
+    // Enhanced numbered list detection
+    const numberedListMatches = content.match(/^\s*\d+\.\s/gm);
+    const numberedCount = numberedListMatches ? numberedListMatches.length : 0;
+    
+    if (numberedCount > 8) score += 20;
+    else if (numberedCount > 4) score += 15;
+    else if (numberedCount > 1) score += 10;
+    else if (numberedCount > 0) score += 5;
+    
+    // Enhanced statistical data detection
+    const statPatterns = [
+      /\d+%/g, // Percentages
+      /\$\d+(?:,\d{3})*/g, // Currency
+      /\d+,\d{3}/g, // Large numbers with commas
+      /\d+\.\d+/g, // Decimal numbers
+      /\d+\s?(?:million|billion|thousand)/gi, // Scale indicators
+      /\d+\s?(?:hours?|days?|weeks?|months?|years?)/gi, // Time periods
+      /\d+\s?(?:people|users|customers|companies)/gi // Quantities
+    ];
+    
+    let statCount = 0;
+    statPatterns.forEach(pattern => {
+      const matches = content.match(pattern);
+      if (matches) statCount += matches.length;
+    });
+    
+    if (statCount > 15) score += 25;
+    else if (statCount > 8) score += 20;
+    else if (statCount > 4) score += 15;
+    else if (statCount > 1) score += 10;
+    
+    // Table indicators (in text content)
+    const tableIndicators = ['table', 'chart', 'graph', 'figure', 'data shows', 'statistics'];
+    const tableScore = tableIndicators.filter(indicator => 
+      content.toLowerCase().includes(indicator)
+    ).length;
+    score += Math.min(tableScore * 3, 15);
+    
+    // Comparison formats
+    const comparisonFormats = [
+      /vs\.?\s/gi,
+      /versus/gi,
+      /compared to/gi,
+      /in contrast/gi,
+      /on the other hand/gi
+    ];
+    
+    let comparisonCount = 0;
+    comparisonFormats.forEach(pattern => {
+      const matches = content.match(pattern);
+      if (matches) comparisonCount += matches.length;
+    });
+    score += Math.min(comparisonCount * 4, 15);
+    
+    // Code or technical formatting
+    const codePatterns = [
+      /`[^`]+`/g, // Inline code
+      /```[\s\S]*?```/g, // Code blocks
+      /<[^>]+>/g // HTML-like tags
+    ];
+    
+    let codeCount = 0;
+    codePatterns.forEach(pattern => {
+      const matches = content.match(pattern);
+      if (matches) codeCount += matches.length;
+    });
+    score += Math.min(codeCount * 2, 10);
     
     return Math.min(100, score);
   }
@@ -809,25 +952,56 @@ export class SeoAnalyzer {
   }
 
   private assessFreshness(data: WebsiteData): number {
-    let score = 0;
+    let score = 10; // Base score
     const content = data.content.toLowerCase();
     const currentYear = new Date().getFullYear();
     
-    // Check for current year
-    if (content.includes(currentYear.toString())) score += 40;
-    if (content.includes((currentYear - 1).toString())) score += 20;
+    // Current year references (weighted by frequency)
+    const currentYearMatches = (content.match(new RegExp(currentYear.toString(), 'g')) || []).length;
+    score += Math.min(currentYearMatches * 15, 30);
     
-    // Check for freshness indicators
-    if (content.includes('updated') || content.includes('revised') || content.includes('latest')) {
-      score += 30;
-    }
+    // Previous year (less weight)
+    const lastYearMatches = (content.match(new RegExp((currentYear - 1).toString(), 'g')) || []).length;
+    score += Math.min(lastYearMatches * 10, 20);
     
-    // Check for recent dates
-    if (content.includes('2024') || content.includes('2025')) {
-      score += 30;
-    }
+    // Freshness indicators with varying weights
+    const freshnessTerms = {
+      'updated': 15,
+      'revised': 12,
+      'latest': 10,
+      'current': 8,
+      'recent': 8,
+      'new': 6,
+      'today': 12,
+      'this year': 10,
+      'recently': 8
+    };
     
-    return Math.min(100, score);
+    let freshnessScore = 0;
+    Object.entries(freshnessTerms).forEach(([term, weight]) => {
+      if (content.includes(term)) {
+        freshnessScore += weight;
+      }
+    });
+    score += Math.min(freshnessScore, 25);
+    
+    // Month references (indicates recent content)
+    const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                   'july', 'august', 'september', 'october', 'november', 'december'];
+    const monthMentions = months.filter(month => content.includes(month)).length;
+    score += Math.min(monthMentions * 3, 15);
+    
+    // Version indicators
+    const versionPatterns = ['version', 'v.', 'update', 'release'];
+    const versionMentions = versionPatterns.filter(pattern => content.includes(pattern)).length;
+    score += Math.min(versionMentions * 5, 15);
+    
+    // Penalty for old years
+    const oldYears = ['2020', '2019', '2018', '2017'];
+    const oldYearMentions = oldYears.filter(year => content.includes(year)).length;
+    score -= Math.min(oldYearMentions * 5, 20);
+    
+    return Math.max(5, Math.min(100, score));
   }
 
   private assessCredibility(data: WebsiteData): number {
