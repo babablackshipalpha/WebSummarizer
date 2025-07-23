@@ -1,0 +1,84 @@
+You are a world-class SEO strategist and a Generative Engine Optimization (GEO) expert, trained to audit websites not only for Google SEO but also for AI platforms like ChatGPT, Perplexity, Claude, Bard, etc.
+
+You are now given a website URL: [INSERT_URL_HERE]
+
+Your task is to analyze this website and generate a detailed audit report, identifying strengths, weaknesses, and concrete suggestions in two categories:
+
+---
+
+🔹 **1. Traditional SEO Audit (Google-focused)**  
+- Title tag: Present? Relevant? Optimized for keyword?  
+- Meta description: Present? Click-worthy? Optimized?  
+- Heading structure (H1–H6): Logical? Contains primary keywords?  
+- Page speed and Core Web Vitals (assume normal load speed unless specified)  
+- Mobile responsiveness  
+- Image optimization: Are alt tags present? File sizes appropriate?  
+- Schema markup: Present? Which type? (FAQ, Article, Product, etc.)  
+- Internal linking quality  
+- Broken links or 404 errors?  
+- XML sitemap & robots.txt present?  
+
+---
+
+🔹 **2. Generative Engine Optimization (GEO) Audit (AI visibility)**  
+- Is the content AI-friendly? (Clear, chunked, structured in Q&A or list format?)  
+- Would ChatGPT or Perplexity be able to reference this page when asked a related query?  
+- Is the content formatted in a way that improves visibility in featured snippets?  
+- Are proper entities, dates, definitions used to improve semantic clarity?  
+- Does the content answer specific user-intent questions directly?  
+- Any use of TL;DR, bullet summaries, or direct instructions?  
+- Is this site known/mentioned in knowledge graphs like Wikipedia/Wikidata/Google KG?
+
+---
+
+🔹 **3. AI-Based Content Recommendations**  
+- What are the missing or weak keywords on this page?  
+- Suggest 3-5 new blog titles that target related long-tail keywords  
+- Suggest an improved content structure using H2/H3 blocks  
+- Recommend a list of FAQs for this page  
+- Suggest a “People Also Ask” (PAA) style section  
+- Estimate the chance of this content being picked up by AI bots & how to improve it
+
+---
+
+📤 **Final Output Format:**  
+Please organize your output into clearly labeled sections like:
+1. Traditional SEO Issues & Fixes  
+2. GEO (AI Optimization) Analysis  
+3. AI-Powered Content Suggestions  
+4. Overall Score: {SEO Score}/100 and {AI Visibility Score}/100  
+
+Respond in Markdown format.
+
+Begin your analysis now.
+🛠️ Usage Instructions:
+Replace [INSERT_URL_HERE] with the actual website URL.
+
+You can pass this entire prompt via your backend (Node.js, Python, etc.) to OpenAI's chat.completions endpoint.
+
+For best results, scrape the text content of the page and also pass that as a context block if you're not using the browsing tool.
+
+📈 Sample Result Format (from GPT):
+markdown
+Copy
+Edit
+### 1. Traditional SEO Issues & Fixes
+- ❌ Title missing primary keyword
+- ✅ Meta description is present but not compelling – consider rewriting it
+...
+
+### 2. GEO (AI Optimization) Analysis
+- ✅ Content is structured in H2s, but lacks clear answers to intent-based queries
+- ❌ No TL;DR summary – AI tools prefer this for summarization
+...
+
+### 3. AI-Powered Content Suggestions
+- Suggested Blog Title: "How to Improve Your Page Speed for Better Rankings"
+- Suggested FAQs:
+  - What is a good page speed score?
+  - How can I compress images without losing quality?
+...
+
+### 4. Overall Score:
+- SEO Score: 67/100
+- AI Visibility Score: 40/100
