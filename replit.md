@@ -33,8 +33,8 @@ The application follows a modern full-stack architecture with clear separation b
 - **Express.js Server**: RESTful API with TypeScript
 - **Service Layer**: Modular services for web scraping and SEO analysis
 - **WebScraper Service**: Uses Cheerio for HTML parsing and content extraction
-- **SeoAnalyzer Service**: Provides traditional SEO and GEO analysis capabilities
-- **Storage Layer**: Abstracted storage interface with in-memory implementation
+- **SeoAnalyzer Service**: Provides traditional SEO and GEO analysis capabilities with enhanced AI assessment
+- **Storage Layer**: PostgreSQL database with Drizzle ORM and abstracted storage interface
 
 ### Database Schema
 - **PostgreSQL**: Primary database using Drizzle ORM
@@ -90,12 +90,13 @@ The application follows a modern full-stack architecture with clear separation b
 ### Key Architectural Decisions
 
 1. **Monorepo Structure**: Shared schema and types between frontend and backend for consistency
-2. **In-Memory Storage Fallback**: Provides development flexibility while supporting PostgreSQL in production
+2. **PostgreSQL Database**: Primary storage with Drizzle ORM for type-safe database operations
 3. **Service-Oriented Backend**: Modular services allow for easy testing and maintenance
 4. **Type-Safe Database Layer**: Drizzle ORM with Zod validation ensures data integrity
 5. **Component-First Frontend**: shadcn/ui provides consistent, accessible UI components
 6. **Optimistic UI Updates**: TanStack Query handles loading states and error recovery
 7. **Responsive Design**: Mobile-first approach with Tailwind CSS breakpoints
+8. **Enhanced AI Assessment**: Advanced scoring algorithms with conservative base scores and content-specific analysis
 
 ## Recent Updates (January 2025)
 
@@ -107,6 +108,9 @@ The application follows a modern full-stack architecture with clear separation b
 ✓ Added comprehensive AI Platform Visibility Assessment with 12-factor analysis
 ✓ Integrated detailed comparison showing ChatGPT, Perplexity, Claude, and Bard optimization factors
 ✓ Enhanced recommendations with priority-based actionable steps in Hindi/English mix
+✓ **Database Integration Complete** - Migrated from in-memory storage to PostgreSQL with Drizzle ORM
+✓ **Enhanced AI Assessment Algorithms** - Fixed scoring differentiation with advanced content analysis
+✓ **Database Storage** - All audit reports now persist in PostgreSQL for historical analysis
 
 ## Key Features
 

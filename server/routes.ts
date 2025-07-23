@@ -203,6 +203,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all audit reports
+  app.get("/api/audit-reports", async (req, res) => {
+    try {
+      const reports = await storage.getAllAuditReports();
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching audit reports:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to fetch audit reports" 
+      });
+    }
+  });
+
+  // Get audit reports by URL
+  app.get("/api/audit-reports/url", async (req, res) => {
+    try {
+      const { url } = req.query;
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ message: "URL parameter is required" });
+      }
+      const reports = await storage.getAuditReportsByUrl(url);
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching audit reports by URL:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to fetch audit reports" 
+      });
+    }
+  });
+
+  // Get specific audit report by ID
+  app.get("/api/audit-reports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid report ID" });
+      }
+      const report = await storage.getAuditReport(id);
+      if (!report) {
+        return res.status(404).json({ message: "Audit report not found" });
+      }
+      res.json(report);
+    } catch (error) {
+      console.error("Error fetching audit report:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to fetch audit report" 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
