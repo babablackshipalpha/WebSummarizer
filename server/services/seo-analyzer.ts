@@ -355,14 +355,14 @@ export class SeoAnalyzer {
     if (currentScore < 50) {
       improvements.push({
         action: 'Add TL;DR Summary Section',
-        description: 'AI tools ke liye page ke top par 2-3 lines ka summary add kariye jo main points cover kare',
+        description: 'Add a 2-3 sentence summary at the top of your page covering the main points for AI tools',
         impact: 'high' as const,
         priority: 1
       });
       
       improvements.push({
         action: 'Create FAQ Schema Markup',
-        description: 'Common questions aur unke answers ko structured data format mein add kariye taaki AI easily samjh sake',
+        description: 'Add common questions and their answers in structured data format so AI can easily understand',
         impact: 'high' as const,
         priority: 2
       });
@@ -372,21 +372,21 @@ export class SeoAnalyzer {
     if (currentScore < 75) {
       improvements.push({
         action: 'Improve Content Structure with Clear Headings',
-        description: 'H2/H3 headings use kariye jo direct questions answer karte hain (What is, How to, Why)',
+        description: 'Use H2/H3 headings that directly answer questions (What is, How to, Why)',
         impact: 'high' as const,
         priority: 3
       });
       
       improvements.push({
         action: 'Add "People Also Ask" Section',
-        description: 'Related questions aur unke short answers add kariye jo users commonly puchte hain',
+        description: 'Add related questions and their short answers that users commonly ask',
         impact: 'medium' as const,
         priority: 4
       });
       
       improvements.push({
         action: 'Include Specific Dates and Statistics',
-        description: 'Current year, numbers, aur specific data points add kariye jo AI tools reference kar sakein',
+        description: 'Add current year, numbers, and specific data points that AI tools can reference',
         impact: 'medium' as const,
         priority: 5
       });
@@ -396,14 +396,14 @@ export class SeoAnalyzer {
     if (currentScore < 85) {
       improvements.push({
         action: 'Optimize for Voice Search Queries',
-        description: 'Natural language phrases add kariye jo log voice assistants se puchte hain',
+        description: 'Add natural language phrases that people ask voice assistants',
         impact: 'medium' as const,
         priority: 6
       });
       
       improvements.push({
         action: 'Add Comparison Tables',
-        description: 'Options, features ya alternatives ko table format mein present kariye',
+        description: 'Present options, features, and alternatives in table format',
         impact: 'medium' as const,
         priority: 7
       });
@@ -413,21 +413,21 @@ export class SeoAnalyzer {
     if (currentScore >= 85) {
       improvements.push({
         action: 'Link to Authoritative Sources',
-        description: 'Wikipedia, government sites, aur trusted sources ko reference kariye credibility ke liye',
+        description: 'Reference Wikipedia, government sites, and trusted sources for credibility',
         impact: 'low' as const,
         priority: 8
       });
       
       improvements.push({
         action: 'Add Step-by-Step Instructions',
-        description: 'Process-based content ko numbered lists mein convert kariye',
+        description: 'Convert process-based content into numbered lists',
         impact: 'low' as const,
         priority: 9
       });
       
       improvements.push({
         action: 'Implement Article Schema',
-        description: 'Publisher, author, aur publication date ka structured data add kariye',
+        description: 'Add structured data for publisher, author, and publication date',
         impact: 'low' as const,
         priority: 10
       });
@@ -932,23 +932,44 @@ export class SeoAnalyzer {
   }
 
   private assessReadability(data: WebsiteData): number {
-    let score = 60; // Base readability score
+    let score = 30; // Lower base score for better differentiation
     
-    // Simple readability heuristics
-    const avgWordsPerSentence = data.wordCount / (data.content.split('.').length || 1);
+    // Sentence length analysis
+    const sentences = data.content.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    if (sentences.length > 0) {
+      const avgWordsPerSentence = data.wordCount / sentences.length;
+      
+      if (avgWordsPerSentence < 15) score += 30; // Easy to read
+      else if (avgWordsPerSentence < 20) score += 20; // Moderate
+      else if (avgWordsPerSentence < 25) score += 10; // Getting complex
+      else score += 5; // Too complex
+    }
     
-    if (avgWordsPerSentence < 15) score += 25;
-    else if (avgWordsPerSentence < 20) score += 15;
-    else score += 5;
+    // Complex word analysis (words longer than 7 characters)
+    const words = data.content.match(/\b\w+\b/g) || [];
+    const complexWords = words.filter(word => word.length > 7);
+    const complexWordRatio = complexWords.length / words.length;
     
-    // Check for jargon indicators (overly complex words)
-    const complexWords = data.content.match(/\w{10,}/g) || [];
-    const complexWordRatio = complexWords.length / data.wordCount;
+    if (complexWordRatio < 0.15) score += 20; // Low complexity
+    else if (complexWordRatio < 0.25) score += 15; // Moderate complexity
+    else if (complexWordRatio < 0.35) score += 10; // High complexity
+    else score += 5; // Very high complexity
     
-    if (complexWordRatio < 0.05) score += 15;
-    else if (complexWordRatio < 0.1) score += 10;
+    // Paragraph length assessment
+    const paragraphs = data.content.split('\n\n').filter(p => p.trim().length > 50);
+    if (paragraphs.length > 0) {
+      const avgParagraphWords = data.wordCount / paragraphs.length;
+      if (avgParagraphWords < 50) score += 15; // Short paragraphs
+      else if (avgParagraphWords < 100) score += 10; // Medium paragraphs
+      else score += 5; // Long paragraphs
+    }
     
-    return Math.min(100, score);
+    // Readability indicators
+    const readabilityTerms = ['simply', 'easy', 'quick', 'step by step', 'in other words', 'for example'];
+    const foundTerms = readabilityTerms.filter(term => data.content.toLowerCase().includes(term));
+    score += Math.min(foundTerms.length * 5, 15);
+    
+    return Math.max(10, Math.min(100, score));
   }
 
   private assessFreshness(data: WebsiteData): number {
@@ -1005,25 +1026,40 @@ export class SeoAnalyzer {
   }
 
   private assessCredibility(data: WebsiteData): number {
-    let score = 40; // Base score
+    let score = 15; // Lower base score for better differentiation
     const content = data.content.toLowerCase();
     
-    // Check for author information
-    if (content.includes('author') || content.includes('written by') || content.includes('by:')) {
-      score += 25;
+    // Author information (various formats)
+    const authorPatterns = ['author:', 'written by', 'by:', 'contributor:', 'created by', 'published by'];
+    const foundAuthor = authorPatterns.some(pattern => content.includes(pattern));
+    if (foundAuthor) score += 25;
+    
+    // Contact and company information
+    const contactPatterns = ['contact us', 'about us', 'our team', 'meet the team', 'company info'];
+    const foundContact = contactPatterns.filter(pattern => content.includes(pattern)).length;
+    score += Math.min(foundContact * 8, 20);
+    
+    // Professional credentials and expertise
+    const credentialTerms = ['expert', 'certified', 'professional', 'phd', 'degree', 'years of experience', 'specialist'];
+    const foundCredentials = credentialTerms.filter(term => content.includes(term)).length;
+    score += Math.min(foundCredentials * 6, 18);
+    
+    // Trust signals
+    const trustSignals = ['award', 'featured in', 'recognized', 'testimonial', 'review', 'trusted by'];
+    const foundTrust = trustSignals.filter(signal => content.includes(signal)).length;
+    score += Math.min(foundTrust * 5, 15);
+    
+    // Publication date or last updated
+    const datePatterns = ['published', 'updated', 'last modified', 'copyright', '2024', '2025'];
+    const foundDate = datePatterns.some(pattern => content.includes(pattern));
+    if (foundDate) score += 12;
+    
+    // External validation
+    if (content.includes('source') || content.includes('reference') || content.includes('study')) {
+      score += 10;
     }
     
-    // Check for contact information
-    if (content.includes('contact') || content.includes('about us') || content.includes('team')) {
-      score += 20;
-    }
-    
-    // Check for credentials
-    if (content.includes('expert') || content.includes('certified') || content.includes('professional')) {
-      score += 15;
-    }
-    
-    return Math.min(100, score);
+    return Math.max(5, Math.min(100, score));
   }
 
   private generateAiVisibilityRecommendations(factors: any[], overallScore: number): any[] {
@@ -1037,24 +1073,32 @@ export class SeoAnalyzer {
             recommendations.push({
               priority: 'high',
               action: 'Add TL;DR Summary Section',
-              description: 'Page ke top या bottom में 2-3 sentences का clear summary add करें जो main points cover करे',
-              impact: 'AI tools आपका content easily समझ और summarize कर पाएंगे'
+              description: 'Add a 2-3 sentence summary at the top or bottom of your page that covers the main points',
+              impact: 'AI tools will be able to easily understand and summarize your content'
             });
             break;
           case 'Q&A Format':
             recommendations.push({
               priority: 'high',
               action: 'Create FAQ Section',
-              description: 'Common questions और उनके direct answers add करें structured format में',
-              impact: 'ChatGPT और Perplexity में better visibility मिलेगी'
+              description: 'Add common questions and their direct answers in a structured format',
+              impact: 'Better visibility in ChatGPT and Perplexity search results'
             });
             break;
           case 'Schema Markup':
             recommendations.push({
               priority: 'high',
               action: 'Implement Structured Data',
-              description: 'FAQPage, Article, या HowTo schema markup add करें',
-              impact: 'AI platforms को content का context better समझ आएगा'
+              description: 'Add FAQPage, Article, or HowTo schema markup to your content',
+              impact: 'AI platforms will better understand your content context and relationships'
+            });
+            break;
+          case 'Content Clarity':
+            recommendations.push({
+              priority: 'high',
+              action: 'Improve Content Structure',
+              description: 'Add clear introductions, definitions, and explanatory content',
+              impact: 'AI systems will better understand and reference your content'
             });
             break;
         }
@@ -1069,16 +1113,24 @@ export class SeoAnalyzer {
             recommendations.push({
               priority: 'medium',
               action: 'Improve Heading Structure',
-              description: 'Single H1 use करें और proper H2/H3 hierarchy बनाएं',
-              impact: 'Content का logical flow AI को better समझ आएगा'
+              description: 'Use a single H1 tag and create proper H2/H3 hierarchy',
+              impact: 'AI systems will better understand your content\'s logical flow'
             });
             break;
           case 'Content Scannability':
             recommendations.push({
               priority: 'medium',
               action: 'Break Content into Short Paragraphs',
-              description: 'Long paragraphs को छोटे में divide करें और bullet points use करें',
-              impact: 'AI tools content को easily scan और extract कर पाएंगे'
+              description: 'Divide long paragraphs into shorter ones and use bullet points',
+              impact: 'AI tools can more easily scan and extract information from your content'
+            });
+            break;
+          case 'Readability Level':
+            recommendations.push({
+              priority: 'medium',
+              action: 'Simplify Language',
+              description: 'Use shorter sentences and simpler vocabulary for better comprehension',
+              impact: 'AI systems prefer content that\'s easy to understand and process'
             });
             break;
         }
@@ -1090,8 +1142,17 @@ export class SeoAnalyzer {
       recommendations.push({
         priority: 'medium',
         action: 'Add Current Year References',
-        description: '2025 और recent data points include करें content freshness के लिए',
-        impact: 'AI platforms fresh और relevant content को prefer करते हैं'
+        description: 'Include 2025 dates and recent data points to show content freshness',
+        impact: 'AI platforms prefer fresh and up-to-date content for their responses'
+      });
+    }
+    
+    if (overallScore < 50) {
+      recommendations.push({
+        priority: 'high',
+        action: 'Add Statistics and Data',
+        description: 'Include specific numbers, percentages, and data points in your content',
+        impact: 'AI systems can extract and reference concrete data points from your content'
       });
     }
     
@@ -1138,7 +1199,7 @@ export class SeoAnalyzer {
         aspect: 'AI Platform Summary',
         url1Value: factor1 ? `${factor1.score}/100` : 'Not assessed',
         url2Value: factor2 ? `${factor2.score}/100` : 'Not assessed',
-        recommendation: 'Add TL;DR sections और clear summaries for better AI visibility'
+        recommendation: 'Add TL;DR sections and clear summaries for better AI visibility'
       });
 
       const schema1 = aiVisibility1.factors.find((f: any) => f.factor === 'Schema Markup');
@@ -1149,7 +1210,7 @@ export class SeoAnalyzer {
         aspect: 'Structured Data Implementation',
         url1Value: schema1 ? `${schema1.score}/100` : 'Not assessed',
         url2Value: schema2 ? `${schema2.score}/100` : 'Not assessed',
-        recommendation: 'Implement FAQPage और Article schema markup for AI platforms'
+        recommendation: 'Implement FAQPage and Article schema markup for AI platforms'
       });
     }
 

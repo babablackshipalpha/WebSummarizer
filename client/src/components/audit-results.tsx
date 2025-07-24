@@ -181,7 +181,7 @@ export default function AuditResults({ report }: AuditResultsProps) {
           {report.contentSuggestions.aiImprovements && report.contentSuggestions.aiImprovements.length > 0 && (
             <div>
               <h4 className="font-semibold text-slate-900 mb-3">
-                AI Visibility Score को 100 तक पहुंचाने के लिए करें:
+                To improve your AI Visibility Score:
               </h4>
               <div className="space-y-3">
                 {report.contentSuggestions.aiImprovements.map((improvement, index) => (
@@ -202,9 +202,9 @@ export default function AuditResults({ report }: AuditResultsProps) {
                         improvement.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-green-100 text-green-800'
                       }`}>
-                        {improvement.impact === 'high' ? 'उच्च प्रभाव' :
-                         improvement.impact === 'medium' ? 'मध्यम प्रभाव' :
-                         'कम प्रभाव'}
+                        {improvement.impact === 'high' ? 'High Impact' :
+                         improvement.impact === 'medium' ? 'Medium Impact' :
+                         'Low Impact'}
                       </span>
                     </div>
                   </div>

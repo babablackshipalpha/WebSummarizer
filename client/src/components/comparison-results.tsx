@@ -53,7 +53,7 @@ export default function ComparisonResults({ result }: ComparisonResultsProps) {
           </div>
           
           {/* Score Comparison Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-slate-50 rounded-lg">
               <div className="text-2xl font-bold text-slate-900">{url1Report.seoScore}</div>
               <div className="text-sm text-slate-600">SEO Score</div>
@@ -66,27 +66,15 @@ export default function ComparisonResults({ result }: ComparisonResultsProps) {
               <div className="text-xs text-slate-500 mt-1">{new URL(url2Report.url).hostname}</div>
             </div>
             
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <div className="text-2xl font-bold text-slate-900">{url1Report.aiScore}</div>
-              <div className="text-sm text-slate-600">AI Score</div>
-              <div className="text-xs text-slate-500 mt-1">{new URL(url1Report.url).hostname}</div>
-            </div>
-            
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <div className="text-2xl font-bold text-slate-900">{url2Report.aiScore}</div>
-              <div className="text-sm text-slate-600">AI Score</div>
-              <div className="text-xs text-slate-500 mt-1">{new URL(url2Report.url).hostname}</div>
-            </div>
-
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-900">{url1AiVisibility.overallScore}</div>
-              <div className="text-sm text-blue-600">AI Platform Score</div>
+              <div className="text-2xl font-bold text-blue-900">{url1Report.aiScore}</div>
+              <div className="text-sm text-blue-600">AI Score</div>
               <div className="text-xs text-slate-500 mt-1">{new URL(url1Report.url).hostname}</div>
             </div>
             
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-900">{url2AiVisibility.overallScore}</div>
-              <div className="text-sm text-blue-600">AI Platform Score</div>
+              <div className="text-2xl font-bold text-blue-900">{url2Report.aiScore}</div>
+              <div className="text-sm text-blue-600">AI Score</div>
               <div className="text-xs text-slate-500 mt-1">{new URL(url2Report.url).hostname}</div>
             </div>
           </div>
@@ -104,7 +92,7 @@ export default function ComparisonResults({ result }: ComparisonResultsProps) {
             </div>
             
             <div className="flex items-center justify-between p-4 bg-white border rounded-lg">
-              <span className="font-medium">AI Visibility Difference</span>
+              <span className="font-medium">AI Score Difference</span>
               <div className="flex items-center space-x-2">
                 {getScoreDifferenceIcon(differences.aiScoreDiff)}
                 <span className={`font-bold ${getScoreDifferenceColor(differences.aiScoreDiff)}`}>
